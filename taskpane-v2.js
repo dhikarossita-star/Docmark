@@ -1,9 +1,9 @@
 /* global Office, Word */
 
-const HEADER_CC_TITLES = ["DOCMARK_HEADER_V1", "DOCMARK_HEADER_V2"];
-const WATERMARK_CC_TITLES = ["DOCMARK_WATERMARK_V1", "DOCMARK_WATERMARK_V2"];
-const HEADER_CC_TITLE = "DOCMARK_HEADER_V2";
-const WATERMARK_CC_TITLE = "DOCMARK_WATERMARK_V2";
+const HEADER_CC_TITLES = ["DOCMARK_HEADER_V1", "DOCMARK_HEADER_V2", "DOCMARK_HEADER_V3"];
+const WATERMARK_CC_TITLES = ["DOCMARK_WATERMARK_V1", "DOCMARK_WATERMARK_V2", "DOCMARK_WATERMARK_V3"];
+const HEADER_CC_TITLE = "DOCMARK_HEADER_V3";
+const WATERMARK_CC_TITLE = "DOCMARK_WATERMARK_V3";
 
 Office.onReady((info) => {
   if (info.host !== Office.HostType.Word) {
@@ -16,7 +16,7 @@ Office.onReady((info) => {
   document.getElementById("headerOnly").addEventListener("click", () => applyTools({ header: true, watermark: false }));
   document.getElementById("removeWatermark").addEventListener("click", removeWatermarkEverywhere);
 
-  setStatus("Siap — versi watermark diagonal V2.");
+  setStatus("Siap — watermark diagonal V3 (image-based untuk iPad).");
 });
 
 function setStatus(message, isError = false) {
@@ -35,14 +35,45 @@ function xmlEscape(value) {
 }
 
 /*
- * True Word-style text watermark.
- * Uses the same VML WordArt pattern Word stores for diagonal watermarks:
- * PowerPlusWaterMarkObject + shapetype #_x0000_t136.
- * Sized to closely match the user's reference PDF.
+ * Word iPad currently renders classic VML text-watermark rotation inconsistently.
+ * V3 therefore draws the diagonal text into a transparent PNG first, then inserts
+ * that image as a floating DrawingML object behind the document text.
  */
-function buildWatermarkOoxml(text) {
-  const safeText = xmlEscape(text);
-  const unique = String(Date.now()).slice(-9);
+function makeWatermarkPngBase64(text) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1600;
+  canvas.height = 1600;
+
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(-45 * Math.PI / 180);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "rgba(128,128,128,0.23)";
+
+  // Fit arbitrary watermark text while keeping TERBATAS close to the reference.
+  let fontPx = 270;
+  do {
+    ctx.font = `700 ${fontPx}px Arial, Helvetica, sans-serif`;
+    if (ctx.measureText(text).width <= 1380) break;
+    fontPx -= 10;
+  } while (fontPx > 100);
+
+  ctx.fillText(text, 0, 0);
+  ctx.restore();
+
+  return canvas.toDataURL("image/png").split(",")[1];
+}
+
+function buildImageWatermarkOoxml(base64Png) {
+  const stamp = String(Date.now());
+  const docPrId = Number(stamp.slice(-8)) || 736291;
+
+  // 520 pt square, centered on page. 1 pt = 12700 EMU.
+  const cx = 6604000;
+  const cy = 6604000;
 
   return `
 <pkg:package xmlns:pkg="http://schemas.microsoft.com/office/2006/xmlPackage">
@@ -57,65 +88,75 @@ function buildWatermarkOoxml(text) {
     </pkg:xmlData>
   </pkg:part>
 
+  <pkg:part pkg:name="/word/_rels/document.xml.rels"
+            pkg:contentType="application/vnd.openxmlformats-package.relationships+xml">
+    <pkg:xmlData>
+      <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+        <Relationship Id="rIdImg1"
+          Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
+          Target="media/docmark-watermark.png"/>
+      </Relationships>
+    </pkg:xmlData>
+  </pkg:part>
+
+  <pkg:part pkg:name="/word/media/docmark-watermark.png"
+            pkg:contentType="image/png"
+            pkg:compression="store">
+    <pkg:binaryData>${base64Png}</pkg:binaryData>
+  </pkg:part>
+
   <pkg:part pkg:name="/word/document.xml"
             pkg:contentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml">
     <pkg:xmlData>
       <w:document
         xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-        xmlns:v="urn:schemas-microsoft-com:vml"
-        xmlns:o="urn:schemas-microsoft-com:office:office"
-        xmlns:w10="urn:schemas-microsoft-com:office:word">
+        xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+        xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+        xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+        xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
         <w:body>
           <w:p>
-            <w:pPr><w:pStyle w:val="Header"/></w:pPr>
             <w:r>
               <w:rPr><w:noProof/></w:rPr>
-              <w:pict>
-                <v:shapetype id="_x0000_t136"
-                  coordsize="1600,21600"
-                  o:spt="136"
-                  adj="10800"
-                  path="m@7,0l@8,0m@5,21600l@6,21600e">
-                  <v:formulas>
-                    <v:f eqn="sum #0 0 10800"/>
-                    <v:f eqn="prod #0 2 1"/>
-                    <v:f eqn="sum 21600 0 @1"/>
-                    <v:f eqn="sum 0 0 @2"/>
-                    <v:f eqn="sum 21600 0 @3"/>
-                    <v:f eqn="if @0 @3 0"/>
-                    <v:f eqn="if @0 21600 @1"/>
-                    <v:f eqn="if @0 0 @2"/>
-                    <v:f eqn="if @0 @4 21600"/>
-                    <v:f eqn="mid @5 @6"/>
-                    <v:f eqn="mid @8 @5"/>
-                    <v:f eqn="mid @7 @8"/>
-                    <v:f eqn="mid @6 @7"/>
-                    <v:f eqn="sum @6 0 @5"/>
-                  </v:formulas>
-                  <v:path textpathok="t"
-                          o:connecttype="custom"
-                          o:connectlocs="@9,0;@10,10800;@11,21600;@12,10800"
-                          o:connectangles="270,180,90,0"/>
-                  <v:textpath on="t" fitshape="t"/>
-                  <v:handles>
-                    <v:h position="#0,bottomRight" xrange="6629,14971"/>
-                  </v:handles>
-                  <o:lock v:ext="edit" text="t" shapetype="t"/>
-                </v:shapetype>
-
-                <v:shape
-                  id="PowerPlusWaterMarkObject${unique}"
-                  o:spid="_x0000_s2049"
-                  type="#_x0000_t136"
-                  style="position:absolute;left:0;text-align:left;margin-left:0;margin-top:0;width:527.85pt;height:131.95pt;rotation:315;z-index:-251657216;mso-position-horizontal:center;mso-position-horizontal-relative:margin;mso-position-vertical:center;mso-position-vertical-relative:margin"
-                  o:allowincell="f"
-                  fillcolor="silver"
-                  stroked="f">
-                  <v:fill opacity=".5"/>
-                  <v:textpath style="font-family:&quot;Arial&quot;;font-size:1pt" string="${safeText}"/>
-                  <w10:wrap anchorx="margin" anchory="margin"/>
-                </v:shape>
-              </w:pict>
+              <w:drawing>
+                <wp:anchor distT="0" distB="0" distL="0" distR="0"
+                           simplePos="0" relativeHeight="0"
+                           behindDoc="1" locked="0" layoutInCell="1" allowOverlap="1">
+                  <wp:simplePos x="0" y="0"/>
+                  <wp:positionH relativeFrom="page"><wp:align>center</wp:align></wp:positionH>
+                  <wp:positionV relativeFrom="page"><wp:align>center</wp:align></wp:positionV>
+                  <wp:extent cx="${cx}" cy="${cy}"/>
+                  <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                  <wp:wrapNone/>
+                  <wp:docPr id="${docPrId}" name="DocMark Watermark" descr="DocMark diagonal watermark"/>
+                  <wp:cNvGraphicFramePr>
+                    <a:graphicFrameLocks noChangeAspect="1"/>
+                  </wp:cNvGraphicFramePr>
+                  <a:graphic>
+                    <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                      <pic:pic>
+                        <pic:nvPicPr>
+                          <pic:cNvPr id="0" name="docmark-watermark.png"/>
+                          <pic:cNvPicPr><a:picLocks noChangeAspect="1"/></pic:cNvPicPr>
+                        </pic:nvPicPr>
+                        <pic:blipFill>
+                          <a:blip r:embed="rIdImg1" cstate="print"/>
+                          <a:stretch><a:fillRect/></a:stretch>
+                        </pic:blipFill>
+                        <pic:spPr>
+                          <a:xfrm>
+                            <a:off x="0" y="0"/>
+                            <a:ext cx="${cx}" cy="${cy}"/>
+                          </a:xfrm>
+                          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                          <a:noFill/>
+                          <a:ln><a:noFill/></a:ln>
+                        </pic:spPr>
+                      </pic:pic>
+                    </a:graphicData>
+                  </a:graphic>
+                </wp:anchor>
+              </w:drawing>
             </w:r>
           </w:p>
         </w:body>
@@ -174,8 +215,10 @@ async function setWatermark(context, headerBody, text) {
   await deleteControlsByTitles(context, headerBody, WATERMARK_CC_TITLES);
   if (!text.trim()) return;
 
-  const ooxml = buildWatermarkOoxml(text.trim());
+  const pngBase64 = makeWatermarkPngBase64(text.trim());
+  const ooxml = buildImageWatermarkOoxml(pngBase64);
   const range = headerBody.insertOoxml(ooxml, Word.InsertLocation.end);
+
   const cc = range.insertContentControl();
   cc.title = WATERMARK_CC_TITLE;
   cc.tag = WATERMARK_CC_TITLE;
@@ -192,7 +235,7 @@ async function applyTools(options) {
     return;
   }
 
-  setStatus("Menerapkan ke dokumen...");
+  setStatus("Menerapkan watermark diagonal...");
 
   try {
     await Word.run(async (context) => {
@@ -202,10 +245,10 @@ async function applyTools(options) {
         if (options.watermark) await setWatermark(context, headerBody, watermark);
       }
     });
-    setStatus("Selesai. Watermark diagonal/header sudah diterapkan.");
+    setStatus("Selesai. Watermark diagonal V3 sudah diterapkan.");
   } catch (error) {
     console.error(error);
-    setStatus("Gagal membuat watermark diagonal: " + (error && error.message ? error.message : String(error)), true);
+    setStatus("Gagal membuat watermark V3: " + (error && error.message ? error.message : String(error)), true);
   }
 }
 
