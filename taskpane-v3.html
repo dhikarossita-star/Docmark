@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>DocMark V3.1</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="stylesheet" href="./taskpane.css?v=31" />
+</head>
+<body>
+  <main class="app">
+    <div class="brand">
+      <div class="brand-mark">D</div>
+      <div>
+        <h1>DocMark <small style="font-size:11px;font-weight:600;color:#667085">V3.1</small></h1>
+        <p>Word helper</p>
+      </div>
+    </div>
+    <section class="card">
+      <label for="watermark">Watermark</label>
+      <input id="watermark" type="text" value="TERBATAS" maxlength="60" placeholder="Contoh: TERBATAS" />
+      <label for="header">Header</label>
+      <textarea id="header" rows="3" maxlength="300" placeholder="Contoh: KONSEP / BIRO PROTOKOL"></textarea>
+      <button id="apply" class="primary" type="button">Apply Watermark + Header</button>
+      <div class="row">
+        <button id="watermarkOnly" type="button">Watermark saja</button>
+        <button id="headerOnly" type="button">Header saja</button>
+      </div>
+      <button id="removeWatermark" class="danger" type="button">Remove Watermark</button>
+      <p id="status" class="status">Memuat V3.1…</p>
+    </section>
+    <section class="note">
+      <strong>Build V3.1</strong>
+      <p>Watermark dibuat sebagai gambar transparan diagonal lalu ditempatkan pada header di belakang teks.</p>
+    </section>
+  </main>
+  <script src="./taskpane-v3.js?v=31"></script>
+</body>
+</html>
