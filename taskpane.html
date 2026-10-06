@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>DocMark</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="stylesheet" href="./taskpane.css" />
+</head>
+<body>
+  <main class="app">
+    <div class="brand">
+      <div class="brand-mark">U</div>
+      <div>
+        <h1>DocMark</h1>
+        <p>Word helper</p>
+      </div>
+    </div>
+
+    <section class="card">
+      <label for="watermark">Watermark</label>
+      <input id="watermark" type="text" value="TERBATAS" maxlength="60"
+             placeholder="Contoh: TERBATAS" />
+
+      <label for="header">Header</label>
+      <textarea id="header" rows="3" maxlength="300"
+                placeholder="Contoh: KONSEP / BIRO PROTOKOL"></textarea>
+
+      <button id="apply" class="primary" type="button">Apply Watermark + Header</button>
+
+      <div class="row">
+        <button id="watermarkOnly" type="button">Watermark saja</button>
+        <button id="headerOnly" type="button">Header saja</button>
+      </div>
+
+      <button id="removeWatermark" class="danger" type="button">Remove Watermark</button>
+      <p id="status" class="status">Siap.</p>
+    </section>
+
+    <section class="note">
+      <strong>Catatan</strong>
+      <p>Add-in menerapkan format pada header section Word sehingga tetap muncul saat dokumen bertambah halaman.</p>
+    </section>
+  </main>
+
+  <script src="./taskpane.js"></script>
+</body>
+</html>

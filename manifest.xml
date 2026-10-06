@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:type="TaskPaneApp">
+
+  <Id>3faed6bf-47e9-4352-b2d9-c9412bde91b1</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>DocMark</ProviderName>
+  <DefaultLocale>id-ID</DefaultLocale>
+
+  <DisplayName DefaultValue="DocMark"/>
+  <Description DefaultValue="Tambahkan watermark dan header ke dokumen Word."/>
+  <SupportUrl DefaultValue="https://YOUR-DOMAIN.example"/>
+
+  <AppDomains>
+    <AppDomain>https://YOUR-DOMAIN.example</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Document"/>
+  </Hosts>
+
+  <Requirements>
+    <Sets DefaultMinVersion="1.1">
+      <Set Name="WordApi" MinVersion="1.1"/>
+    </Sets>
+  </Requirements>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://YOUR-DOMAIN.example/taskpane.html"/>
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+</OfficeApp>
