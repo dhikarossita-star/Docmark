@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:type="TaskPaneApp">
+  <Id>1e83dc93-b96d-4fe2-93c0-845247aeb539</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>DocMark</ProviderName>
+  <DefaultLocale>id-ID</DefaultLocale>
+  <DisplayName DefaultValue="DocMark Diagonal"/>
+  <Description DefaultValue="Watermark diagonal dan header untuk Word."/>
+  <SupportUrl DefaultValue="https://dhikarossita-star.github.io/Docmark/"/>
+  <AppDomains>
+    <AppDomain>https://dhikarossita-star.github.io</AppDomain>
+  </AppDomains>
+  <Hosts><Host Name="Document"/></Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.1">
+      <Set Name="WordApi" MinVersion="1.1"/>
+    </Sets>
+  </Requirements>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://dhikarossita-star.github.io/Docmark/docmark-diagonal.html?build=final1007"/>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+</OfficeApp>
